@@ -1,0 +1,101 @@
+#!/usr/bin/php
+<?php
+
+class Hoster {
+	private $methods = array(
+		"?" => "check",
+		"+" => "add",
+		"-" => "remove",
+	);
+
+	private $host = null;
+
+	private $method = null;
+
+	private $ip = null;
+
+	public function __construct($argv) {
+		try {
+			$this->checkArgs($argv);
+
+			$this->host = $argv[1];
+			$this->method = $argv[2];
+			if (isset($argv[3])) {
+				$this->ip = $argv[3];
+			}
+
+			$this->{$this->methods[$this->method]}($this->host, $this->ip);
+		} catch (Exception $e) {
+			echo $e->getMessage();
+		}
+	}
+
+	private function usage() {
+		return "Usage: mhost [hostname] [" . join("|", array_keys($this->methods)) . "] [(ip)]";
+	}
+
+	private function checkArgs($argv) {
+		if (count($argv) < 3) {
+			throw new Exception($this->usage());
+		}
+
+		if (!in_array($argv[2], array_keys($this->methods))) {
+			throw new Exception($this->usage());
+		}
+	}
+
+	private function add($host, $ip) {
+		if ($ip == null) {
+			$ip = array(
+				"::1",
+				"127.0.0.1",
+			);
+		}
+
+		if (is_array($ip)) {
+			$comment = sprintf("# %s added by mhost at %s\n", $host, date('Y-m-d H:i:s'));
+			error_log($comment, 3, '/etc/hosts');
+			foreach ($ip as $ipItem) {
+				$this->add($host, $ipItem);
+			}
+			error_log($comment, 3, '/etc/hosts');
+		} else {
+			$line = sprintf("%s %s\n", str_pad($ip, 20), $host);
+			printf("Adding %s", $line);
+			error_log($line, 3, '/etc/hosts');
+		}
+	}
+
+	private function remove($host) {
+		$lines = file('/etc/hosts');
+		$isOn = false;
+		$newlines = array();
+
+		foreach ($lines as $line) {
+			$triggerPattern = "/# " . $host . " added/";
+			if (preg_match($triggerPattern, $line)) {
+				$isOn = !$isOn;
+			}
+
+			if (preg_match($triggerPattern, $line) || $isOn === true) {
+				printf("Removing %s", $line);
+			} else {
+				$newlines[] = $line;
+			}
+		}
+
+		file_put_contents('/etc/hosts', join("", $newlines));
+	}
+
+	private function check($host) {
+		$lines = file('/etc/hosts');
+		foreach ($lines as $line) {
+			$pattern = "/(.*)\s" . $host . "/";
+			if (preg_match($pattern, $line)) {
+				printf("Found %s", $line);
+			}
+		}
+	}
+}
+
+$hoster = new Hoster($argv);
