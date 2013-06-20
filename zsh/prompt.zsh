@@ -43,7 +43,7 @@ need_push () {
   then
     echo " "
   else
-    echo " with %{$fg_bold[magenta]%}unpushed%{$reset_color%} "
+    echo " with %{$fg_bold[red]%}unpushed%{$reset_color%} "
   fi
 }
 
@@ -75,11 +75,15 @@ todo(){
   fi
 }
 
-directory_name(){
-  echo "%{$fg_bold[cyan]%}$PWD%{$reset_color%}"
+location(){
+  echo "%{$fg_bold[cyan]%}$USERNAME@$HOST%{$reset_color%}"
 }
 
-export PROMPT=$'\n$USERNAME@$HOST $(directory_name) $(git_dirty)$(need_push)\n› '
+directory_name(){
+  echo "%{$fg_bold[green]%}$PWD%{$reset_color%}"
+}
+
+export PROMPT=$'[$(location):$(directory_name)] $(git_dirty)$(need_push)\n$ '
 set_prompt () {
   export RPROMPT="%{$fg_bold[cyan]%}$(todo)%{$reset_color%}"
 }
