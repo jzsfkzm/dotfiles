@@ -9,8 +9,49 @@ else
   git="/usr/bin/git"
 fi
 
+if (( $+commands[grep] ))
+then
+  grep="$commands[grep]"
+else
+  grep="/usr/bin/grep"
+fi
+
 git_branch() {
   echo $($git symbolic-ref HEAD 2>/dev/null | awk -F/ {'print $NF'})
+}
+
+git_stash() {
+  stash=${$($git stash list 2>/dev/null | wc -l)// /}
+  if [[ $stash == "0" ]]
+  then
+    echo ""
+  else
+    echo "%{$fg_bold[cyan]%}[$stash]%{$reset_color%} "
+  fi
+}
+
+git_new() {
+
+}
+
+git_new_changed_staged() {
+  git_status=("${(f)$($git status --porcelain | cut -c1-2)}")
+  integer new=0
+  integer changed=0
+  integer staged=0
+  for line ($git_status) {
+    if [[ $line =~ "[MADRC][ MD]" ]]; then
+      (( staged = $staged + 1 ))
+    fi
+
+    if [[ $line =~ "\?\?" ]]; then
+      (( new = $new + 1 ))
+    elif [[ $line =~ "[MADRC ][MD]" ]]; then
+      (( changed = $changed + 1 ))
+    fi
+  }
+
+  echo "%{$fg_bold[red]%}$new%{$reset_color%}:%{$fg_bold[red]%}$changed%{$reset_color%}:%{$fg_bold[red]%}$staged%{$reset_color%}"
 }
 
 git_dirty() {
@@ -19,40 +60,22 @@ git_dirty() {
   then
     echo ""
   else
-    if [[ "$st" =~ ^nothing ]]
-    then
-      echo "on %{$fg_bold[green]%}$(git_prompt_info)%{$reset_color%}"
-    else
-      echo "on %{$fg_bold[red]%}$(git_prompt_info)%{$reset_color%}"
-    fi
+    echo "(%{$fg_bold[cyan]%}$(git_branch)%{$reset_color%}) $(git_stash)$(git_new_changed_staged)"
   fi
 }
 
-git_prompt_info () {
+git_branch() {
  ref=$($git symbolic-ref HEAD 2>/dev/null) || return
-# echo "(%{\e[0;33m%}${ref#refs/heads/}%{\e[0m%})"
  echo "${ref#refs/heads/}"
 }
 
-unpushed () {
-  $git cherry -v @{upstream} 2>/dev/null
-}
-
-need_push () {
-  if [[ $(unpushed) == "" ]]
+git_commits() {
+  commits=${$($git cherry -v @{upstream} 2>/dev/null | wc -l)// /}
+  if [[ $commits == "0" ]]
   then
-    echo " "
+    echo ""
   else
-    echo " with %{$fg_bold[red]%}unpushed%{$reset_color%} "
-  fi
-}
-
-rb_prompt(){
-  if (( $+commands[rbenv] ))
-  then
-	  echo "%{$fg_bold[yellow]%}$(rbenv version | awk '{print $1}')%{$reset_color%}"
-	else
-	  echo ""
+    echo " [%{$fg_bold[red]%}$commits%{$reset_color%}]"
   fi
 }
 
@@ -83,7 +106,7 @@ directory_name(){
   echo "%{$fg_bold[green]%}$PWD%{$reset_color%}"
 }
 
-export PROMPT=$'[$(location):$(directory_name)] $(git_dirty)$(need_push)\n$ '
+export PROMPT=$'[$(location):$(directory_name)] $(git_dirty)$(git_commits)\n$ '
 set_prompt () {
   export RPROMPT="%{$fg_bold[cyan]%}$(todo)%{$reset_color%}"
 }
