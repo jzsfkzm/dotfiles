@@ -149,6 +149,13 @@ defaults write com.apple.Safari com.apple.Safari.ContentPageGroupIdentifier.WebK
 # Prevent Time Machine from prompting to use new hard drives as backup volume
 defaults write com.apple.TimeMachine DoNotOfferNewDisksForBackup -bool true
 
+###############################################################################
+# Menu bar                                                                    #
+###############################################################################
+
+# Use the 24-hour clock
+defaults write com.apple.MenuBarClock Use24HourClock -bool true
+
 
 ###############################################################################
 # End                                                                         #
