@@ -9,34 +9,31 @@ else
   git="/usr/bin/git"
 fi
 
-if (( $+commands[grep] ))
-then
-  grep="$commands[grep]"
-else
-  grep="/usr/bin/grep"
-fi
-
-git_branch() {
-  echo $($git symbolic-ref HEAD 2>/dev/null | awk -F/ {'print $NF'})
+git_current_branch() {
+  echo " on $(color_value $($git symbolic-ref HEAD 2>/dev/null | awk -F/ {'print $NF'}) cyan)"
 }
 
-git_stash() {
+git_stashes() {
   stash=${$($git stash list 2>/dev/null | wc -l)// /}
   if [[ $stash == "0" ]]
   then
     echo ""
   else
-    echo "%{$fg_bold[cyan]%}[$stash]%{$reset_color%} "
+    echo " {$(color_value $stash cyan)}"
   fi
 }
 
-git_new() {
-
+color_value() {
+  if [[ $1 == "0" ]]; then
+    echo $1
+  else
+    echo %{$fg_bold[$2]%}$1%{$reset_color%}
+  fi
 }
 
-git_new_changed_staged() {
-  git_status=("${(f)$($git status --porcelain | cut -c1-2)}")
-  integer new=0
+git_untracked_changed_staged() {
+  git_status=("${(f)$($git status --porcelain --untracked-files=all | cut -c1-2)}")
+  integer untracked=0
   integer changed=0
   integer staged=0
   for line ($git_status) {
@@ -45,13 +42,13 @@ git_new_changed_staged() {
     fi
 
     if [[ $line =~ "\?\?" ]]; then
-      (( new = $new + 1 ))
+      (( untracked = $untracked + 1 ))
     elif [[ $line =~ "[MADRC ][MD]" ]]; then
       (( changed = $changed + 1 ))
     fi
   }
 
-  echo "%{$fg_bold[red]%}$new%{$reset_color%}:%{$fg_bold[red]%}$changed%{$reset_color%}:%{$fg_bold[red]%}$staged%{$reset_color%}"
+  echo " $(color_value $untracked red):$(color_value $changed red):$(color_value $staged red)"
 }
 
 git_dirty() {
@@ -60,13 +57,8 @@ git_dirty() {
   then
     echo ""
   else
-    echo "(%{$fg_bold[cyan]%}$(git_branch)%{$reset_color%}) $(git_stash)$(git_new_changed_staged)"
+    echo "$(git_current_branch)$(git_stashes)$(git_untracked_changed_staged)$(git_commits)"
   fi
-}
-
-git_branch() {
- ref=$($git symbolic-ref HEAD 2>/dev/null) || return
- echo "${ref#refs/heads/}"
 }
 
 git_commits() {
@@ -75,43 +67,20 @@ git_commits() {
   then
     echo ""
   else
-    echo " [%{$fg_bold[red]%}$commits%{$reset_color%}]"
-  fi
-}
-
-# This keeps the number of todos always available the right hand side of my
-# command line. I filter it to only count those tagged as "+next", so it's more
-# of a motivation to clear out the list.
-todo(){
-  if (( $+commands[todo.sh] ))
-  then
-    num=$(echo $(todo.sh ls +next | wc -l))
-    let todos=num-2
-    if [ $todos != 0 ]
-    then
-      echo "$todos"
-    else
-      echo ""
-    fi
-  else
-    echo ""
+    echo " [$(color_value $commits cyan)]"
   fi
 }
 
 location(){
-  echo "%{$fg_bold[cyan]%}$USERNAME@$HOST%{$reset_color%}"
+  echo "$(color_value $USERNAME@$HOST cyan)"
 }
 
 directory_name(){
-  echo "%{$fg_bold[green]%}$PWD%{$reset_color%}"
+  echo "$(color_value $PWD green)"
 }
 
-export PROMPT=$'[$(location):$(directory_name)] $(git_dirty)$(git_commits)\n$ '
-set_prompt () {
-  export RPROMPT="%{$fg_bold[cyan]%}$(todo)%{$reset_color%}"
-}
+export PROMPT=$'[$(location):$(directory_name)]$(git_dirty)\n$ '
 
 precmd() {
   title "zsh" "%m" "%55<...<%~"
-  set_prompt
 }
