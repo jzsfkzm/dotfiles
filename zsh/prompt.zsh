@@ -48,7 +48,11 @@ git_untracked_changed_staged() {
     fi
   }
 
-  echo " $(color_value $untracked red):$(color_value $changed red):$(color_value $staged red)"
+  if [[ $untracked == 0 && $changed == 0 && $staged == 0 ]];then
+    echo ""
+  else
+    echo " $(color_value $untracked red):$(color_value $changed red):$(color_value $staged red)"
+  fi
 }
 
 git_dirty() {
