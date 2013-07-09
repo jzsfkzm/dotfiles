@@ -24,7 +24,7 @@
         branch = auto
         ui = true
 [core]
-        excludesfile = ~/.gitignore
+        excludesfile = /opt/boxen/config/git/gitignore
         editor = subl
 [apply]
         whitespace = nowarn
