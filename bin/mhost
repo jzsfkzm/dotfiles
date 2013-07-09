@@ -21,7 +21,9 @@ class Hoster {
 			$this->host = $argv[1];
 			$this->method = $argv[2];
 			if (isset($argv[3])) {
-				$this->ip = $argv[3];
+				$this->ip = array(
+					$argv[3]
+				);
 			}
 
 			$this->{$this->methods[$this->method]}($this->host, $this->ip);
@@ -60,7 +62,7 @@ class Hoster {
 			}
 			error_log($comment, 3, '/etc/hosts');
 		} else {
-			$line = sprintf("%s %s\n", str_pad($ip, 20), $host);
+			$line = sprintf("%s %s\n", str_pad($ip, 16), $host);
 			printf("Adding %s", $line);
 			error_log($line, 3, '/etc/hosts');
 		}
