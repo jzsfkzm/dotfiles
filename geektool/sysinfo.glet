@@ -10,11 +10,14 @@ function color() {
 	then
 		if [[ $1 -lt 11 ]]
 		then
+			# red
 			echo 31
 		elif [[ $1 -lt 31 ]]
 		then
+			# yellow
 			echo 33
 		else
+			# green
 			echo 32
 		fi
 	else
@@ -46,49 +49,67 @@ function line() {
 	done
 	if [[ $4 != "" ]]
 	then
-		echo "${(l:6:: :)${4}}"
+		echo "\033[2;$5m${(l:6:: :)${4}}\033[0m"
 	else
 		echo "${(l:5:: :)${2}}%"
 	fi
 }
 
-function cpu() {
+function cpu_memory() {
+	tmp="/tmp/memory.lst"
+	rm $tmp
+	top -l 1 &gt; $tmp
+
 	# CPU usage
-	myCPU=`top -l 1 | awk '/CPU usage/ {print $3}' | sed s/%//`
+	myCPU=`cat $tmp | awk '/CPU usage/ {print $3}' | sed s/%//`
 	myCPU=`echo "tmp=$myCPU; tmp /= 1; tmp" | bc`
 	line "CPU Usage" $myCPU
+
+	# Memory usage
+	myUsedMem=`cat $tmp | awk '/PhysMem/ {print $8}' | sed s/M// `
+	myFreeMem=`cat $tmp | awk '/PhysMem/ {print $10}' | sed s/M// `
+	myActiveMem=`cat $tmp | awk '/PhysMem/ {print $4}' | sed s/M// `
+	myTotalMem=` expr $myUsedMem + $myFreeMem`
+	#myUsedPer=`echo |awk '{print f / t * 100}' f=$myActiveMem t=$myTotalMem`
+	#myUsedPer=`echo "tmp=$myUsedPer; tmp /= 1; tmp" | bc`
+	myUsedPer=`echo $myActiveMem $myTotalMem | awk '{print int($1/$2*100)}'`
+	line "Memory Usage" $myUsedPer
 }
 
 function hours_minutes() {
-	# Calculates hours:m
+	# Changes minutes to h:mm format
 	let "hours = $1 / 60"
 	let "minutes = $1 % 60"
 	echo $hours:${(l:2::0:)${minutes}}
 }
 
 function battery() {
-	# Battery charge level
-	bat=`ioreg -l | grep -i capacity | tr '\n' ' | ' | awk '{print int($10/$5*100)}'`
-	time=`ioreg -l | grep -i timeremaining | awk '{print $5}'`
+	# Battery charge level and status
+	tmp="/tmp/battery.lst"
+	rm $tmp
+	ioreg -l | grep "\-o AppleSmartBattery" -A 100 &gt; $tmp
+
+	bat=`grep Capacity $tmp | tr '\n' ' | ' | awk '{print int($10/$5*100)}'`
+	time=`grep -i timeremaining $tmp | awk '{print $5}'`
 	hm=`hours_minutes $time`
-	line "System Battery" $bat reverse $hm
+	charged=`grep -i fullycharged $tmp | awk '{print $5}'`
+	connected=`grep -i externalconnected $tmp | awk '{print $5}'`
+	if [[ $connected = "Yes" ]]
+	then
+		if [[ $charged = "Yes" ]]
+		then
+			line "System Battery" $bat reverse full
+		else
+			line "System Battery" $bat reverse $hm 32
+		fi
+	else
+		line "System Battery" $bat reverse $hm 31
+	fi
 
 	# Battery health
-	health=`ioreg -w0 -l | grep Capacity | tr '\n' ' | ' | awk '{print int($5/$21*100)}'`
+	health=`grep Capacity $tmp | tr '\n' ' | ' | awk '{print int($5/$21*100)}'`
 	typeset -i b=9
 	line "Battery Health" $health reverse
-}
-
-function memory() {
-	# Memory
-	myUsedMem=`top -l 1 | awk '/PhysMem/ {print $8}' | sed s/M// `
-	myFreeMem=`top -l 1 | awk '/PhysMem/ {print $10}' | sed s/M// `
-	myActiveMem=`top -l 1 | awk '/PhysMem/ {print $4}' | sed s/M// `
-	myTotalMem=` expr $myUsedMem + $myFreeMem`
-	#myUsedPer=`echo |awk '{print f / t * 100}' f=$myActiveMem t=$myTotalMem`
-	#myUsedPer=`echo "tmp=$myUsedPer; tmp /= 1; tmp" | bc`
-	myUsedPer=`echo $myActiveMem $myTotalMem | awk '{print int($1/$2*100)}'`
-	line "Memory Usage" $myUsedPer
 }
 
 function disks() {
@@ -106,9 +127,8 @@ function disks() {
 	done
 }
 
-cpu
+cpu_memory
 battery
-memory
 disks
 
 #
