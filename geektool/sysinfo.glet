@@ -98,7 +98,7 @@ function battery() {
 	then
 		if [[ $charged = "Yes" ]]
 		then
-			line "System Battery" $bat reverse full
+			line "System Battery" 100 reverse full
 		else
 			line "System Battery" $bat reverse $hm 32
 		fi
