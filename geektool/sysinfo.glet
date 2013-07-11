@@ -36,16 +36,15 @@ function color() {
 function line() {
 	echo -n "${(r:16:: :)${1}}"
 	typeset -i a=9
-	while [ $a -lt $2 ]
+	while [ $a -le $2 ]
 	do
-		echo "\033[2;$(color $2 $3)m▇\033[0m\c"
-		a=`expr $a + 7`
+		echo "\033[2;$(color $2 $3)m█\033[0m\c"
+		a=`expr $a + 5`
 	done
-	#echo "\033[1;39m█\033[0m\c"
 	while [ $a -lt 100 ]
 	do
-		echo "\033[2;30m▇\033[0m\c"
-		a=`expr $a + 7`
+		echo "\033[2;30m█\033[0m\c"
+		a=`expr $a + 5`
 	done
 	if [[ $4 != "" ]]
 	then
