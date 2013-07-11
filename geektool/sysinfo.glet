@@ -39,17 +39,22 @@ function line() {
 	while [ $a -lt $2 ]
 	do
 		echo "\033[2;$(color $2 $3)m▇\033[0m\c"
-		a=`expr $a + 10`
+		a=`expr $a + 7`
 	done
 	#echo "\033[1;39m█\033[0m\c"
 	while [ $a -lt 100 ]
 	do
 		echo "\033[2;30m▇\033[0m\c"
-		a=`expr $a + 10`
+		a=`expr $a + 7`
 	done
 	if [[ $4 != "" ]]
 	then
-		echo "\033[2;$5m${(l:6:: :)${4}}\033[0m"
+		if [[ $5 != "" ]]
+		then
+			echo "\033[2;$5m${(l:6:: :)${4}}\033[0m"
+		else
+			echo "${(l:6:: :)${4}}"
+		fi
 	else
 		echo "${(l:5:: :)${2}}%"
 	fi
@@ -103,7 +108,7 @@ function battery() {
 			line "System Battery" $bat reverse $hm 32
 		fi
 	else
-		line "System Battery" $bat reverse $hm 31
+		line "System Battery" $bat reverse $hm
 	fi
 
 	# Battery health
@@ -169,7 +174,7 @@ disks
 	<key>FontSize</key>
 	<real>14</real>
 	<key>GeekletFrame</key>
-	<string>{{76, 723}, {353.234375, 139.65234375}}</string>
+	<string>{{53, 678}, {482, 175}}</string>
 	<key>HasShadow</key>
 	<false/>
 	<key>Identifier</key>
