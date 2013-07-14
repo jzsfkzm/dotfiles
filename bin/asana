@@ -1,0 +1,62 @@
+#!/usr/bin/php
+<?php
+
+class Asana {
+
+	private static $tempFile = '/tmp/asana.lst';
+	private static $apiKey = null;
+
+	static function writeCache() {
+		self::$apiKey = self::getApiKey();
+		$tasks = self::getTasks();
+
+		if (file_exists(self::$tempFile)) {
+			unlink(self::$tempFile);
+		}
+
+		foreach ($tasks['data'] as $i => $item) {
+			$task = self::getTask($item['id']);
+			if ($task['data']['completed'] === false) {
+				error_log(sprintf("%s: %s\n", $item['id'], $item['name']), 3, self::$tempFile);
+			}
+		}
+	}
+
+	static function dumpCache () {
+		readfile(self::$tempFile);
+	}
+
+	static function getApiKey() {
+		return trim(file_get_contents('/Users/joco/.asana_api_key'));
+	}
+
+	static function apiCommand($url) {
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_VERBOSE, 0);
+		curl_setopt($ch, CURLOPT_HEADER, 0);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_USERPWD, self::$apiKey . ':');
+
+		$response = json_decode(curl_exec($ch), true);
+		curl_close($ch);
+
+		return $response;
+	}
+
+	static function getTasks() {
+		return self::apiCommand('https://app.asana.com/api/1.0/tasks?workspace=443208527780&assignee=me');
+	}
+
+	static function getTask($id) {
+		return self::apiCommand('https://app.asana.com/api/1.0/tasks/' . $id);
+	}
+}
+
+if (isset($argv[1]) && $argv[1] === 'cache') {
+	Asana::writeCache();
+}
+
+Asana::dumpCache();
+
+#
