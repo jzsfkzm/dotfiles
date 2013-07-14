@@ -2,19 +2,14 @@ autoload colors && colors
 # cheers, @ehrenmurdick
 # http://github.com/ehrenmurdick/config/blob/master/zsh/prompt.zsh
 
-if (( $+commands[git] ))
-then
-  git="$commands[git]"
-else
-  git="/usr/bin/git"
-fi
+git=`which git`
 
 git_current_branch() {
   echo " on $(color_value $($git symbolic-ref HEAD 2>/dev/null | awk -F/ {'print $NF'}) cyan)"
 }
 
 git_stashes() {
-  stash=${$($git stash list 2>/dev/null | wc -l)// /}
+  stash=${$($git stash list 2>/dev/null | wc -l | tr -d " ")}
   if [[ $stash == "0" ]]
   then
     echo ""
@@ -33,11 +28,11 @@ color_value() {
 
 git_untracked_changed_staged() {
   git_status=("${(f)$($git status --porcelain --untracked-files=all | cut -c1-2)}")
-  integer untracked=0
-  integer changed=0
-  integer staged=0
+  untracked=0
+  changed=0
+  staged=0
   for line ($git_status) {
-    if [[ $line =~ "[MADRC][ MD]" ]]; then
+    if [[ $line =~ "[MADRC][MD ]" ]]; then
       (( staged = $staged + 1 ))
     fi
 
@@ -66,7 +61,7 @@ git_dirty() {
 }
 
 git_commits() {
-  commits=${$($git cherry -v @{upstream} 2>/dev/null | wc -l)// /}
+  commits=${$($git cherry -v @{upstream} 2>/dev/null | wc -l | tr -d " ")}
   if [[ $commits == "0" ]]
   then
     echo ""
@@ -75,16 +70,12 @@ git_commits() {
   fi
 }
 
-location(){
+location() {
   echo "$(color_value $USERNAME@$HOST cyan)"
 }
 
-directory_name(){
+directory_name() {
   echo "$(color_value $PWD green)"
 }
 
 export PROMPT=$'[$(location):$(directory_name)]$(git_dirty)\n$ '
-
-precmd() {
-  title "zsh" "%m" "%55<...<%~"
-}
