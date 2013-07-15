@@ -107,4 +107,10 @@ directory_name() {
   echo "$(color_value `pwd` $BRIGHT_GREEN)"
 }
 
-export PS1="[$(location):$(directory_name)]$(git_dirty)\n$ "
+prompt_command() {
+  export PS1="[$(location):$(directory_name)]$(git_dirty)\n$ "
+}
+
+PROMPT_COMMAND=prompt_command
+
+#
