@@ -2,15 +2,9 @@
 <?php
 
 class Hoster {
-	private $methods = array(
-		"?" => "check",
-		"+" => "add",
-		"-" => "remove",
-	);
+	private $file = '/etc/hosts';
 
 	private $host = null;
-
-	private $method = null;
 
 	private $ip = null;
 
@@ -19,29 +13,28 @@ class Hoster {
 			$this->checkArgs($argv);
 
 			$this->host = $argv[1];
-			$this->method = $argv[2];
-			if (isset($argv[3])) {
+			if (isset($argv[2])) {
 				$this->ip = array(
-					$argv[3]
+					$argv[2]
 				);
 			}
 
-			$this->{$this->methods[$this->method]}($this->host, $this->ip);
+			if ($this->check($this->host) === true) {
+				$this->remove($this->host, $this->ip);
+			} else {
+				$this->add($this->host, $this->ip);
+			}
 		} catch (Exception $e) {
 			echo $e->getMessage();
 		}
 	}
 
 	private function usage() {
-		return "Usage: mhost [hostname] [" . join("|", array_keys($this->methods)) . "] [(ip)]";
+		return "Usage: mhost [hostname] [(ip)]";
 	}
 
 	private function checkArgs($argv) {
-		if (count($argv) < 3) {
-			throw new Exception($this->usage());
-		}
-
-		if (!in_array($argv[2], array_keys($this->methods))) {
+		if (count($argv) < 2) {
 			throw new Exception($this->usage());
 		}
 	}
@@ -56,20 +49,20 @@ class Hoster {
 
 		if (is_array($ip)) {
 			$comment = sprintf("# %s added by mhost at %s\n", $host, date('Y-m-d H:i:s'));
-			error_log($comment, 3, '/etc/hosts');
+			error_log($comment, 3, $this->file);
 			foreach ($ip as $ipItem) {
 				$this->add($host, $ipItem);
 			}
-			error_log($comment, 3, '/etc/hosts');
+			error_log($comment, 3, $this->file);
 		} else {
 			$line = sprintf("%s %s\n", str_pad($ip, 16), $host);
 			printf("Adding %s", $line);
-			error_log($line, 3, '/etc/hosts');
+			error_log($line, 3, $this->file);
 		}
 	}
 
 	private function remove($host) {
-		$lines = file('/etc/hosts');
+		$lines = file($this->file);
 		$isOn = false;
 		$newlines = array();
 
@@ -86,17 +79,19 @@ class Hoster {
 			}
 		}
 
-		file_put_contents('/etc/hosts', join("", $newlines));
+		file_put_contents($this->file, join("", $newlines));
 	}
 
 	private function check($host) {
-		$lines = file('/etc/hosts');
+		$lines = file($this->file);
 		foreach ($lines as $line) {
 			$pattern = "/(.*)\s" . $host . "/";
 			if (preg_match($pattern, $line)) {
-				printf("Found %s", $line);
+				return true;
 			}
 		}
+
+		return false;
 	}
 }
 
