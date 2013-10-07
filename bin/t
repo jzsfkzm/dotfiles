@@ -1,0 +1,4 @@
+#!/bin/bash
+
+scp "$1" rambutan.hu:~/Downloads/Torrents/
+rm "$1"

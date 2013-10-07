@@ -3,27 +3,54 @@
 
 class Asana {
 
-	private static $tempFile = '/tmp/asana.lst';
-	private static $apiKey = null;
+	private static $_tempFile = '/tmp/asana.lst';
+	private static $_apiKey = null;
+	private static $_debug = false;
 
-	static function writeCache() {
-		self::$apiKey = self::getApiKey();
-		$tasks = self::getTasks();
+	static function writeCache($debug) {
+		$projects = array();
+		self::$_debug = $debug;
 
-		if (file_exists(self::$tempFile)) {
-			unlink(self::$tempFile);
+		$processCount = `ps aux | grep asana | wc -l`;
+		if ($processCount > 3) {
+			return false;
 		}
 
+		self::$_apiKey = self::getApiKey();
+		$tasks = self::getTasks();
+		self::printDebug(sprintf("List of %s tasks loaded\n", count($tasks['data'])));
 		foreach ($tasks['data'] as $i => $item) {
 			$task = self::getTask($item['id']);
+			self::printDebug(sprintf("%s/%s tasks loaded\n", ($i + 1), count($tasks['data'])));
 			if ($task['data']['completed'] === false) {
-				error_log(sprintf("%s: %s\n", $item['id'], $item['name']), 3, self::$tempFile);
+				foreach ($task['data']['projects'] as $j => $project) {
+					if (!isset($projects[$project['name']])) {
+						$projects[$project['name']] = array();
+					}
+
+					$projects[$project['name']][] = $task['data'];
+				}
 			}
+		}
+
+		foreach ($projects as $name => $tasks) {
+			error_log(sprintf("\n%s\n", $name), 3, self::$_tempFile . '.tmp');
+			foreach ($tasks as $i => $task) {
+				error_log(sprintf("\t%s: %s\n", $task['id'], $task['name']), 3, self::$_tempFile . '.tmp');
+			}
+		}
+
+		rename(self::$_tempFile . '.tmp', self::$_tempFile);
+	}
+
+	static function printDebug ($line) {
+		if (self::$_debug === true) {
+			echo $line;
 		}
 	}
 
 	static function dumpCache () {
-		readfile(self::$tempFile);
+		readfile(self::$_tempFile);
 	}
 
 	static function getApiKey() {
@@ -36,7 +63,7 @@ class Asana {
 		curl_setopt($ch, CURLOPT_VERBOSE, 0);
 		curl_setopt($ch, CURLOPT_HEADER, 0);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_USERPWD, self::$apiKey . ':');
+		curl_setopt($ch, CURLOPT_USERPWD, self::$_apiKey . ':');
 
 		$response = json_decode(curl_exec($ch), true);
 		curl_close($ch);
@@ -54,7 +81,8 @@ class Asana {
 }
 
 if (isset($argv[1]) && $argv[1] === 'cache') {
-	Asana::writeCache();
+	$debug = isset($argv[2]) && $argv[2] === 'debug';
+	Asana::writeCache($debug);
 }
 
 Asana::dumpCache();
