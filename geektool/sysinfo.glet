@@ -70,13 +70,12 @@ function cpu_memory() {
 	line "CPU Usage" $myCPU
 
 	# Memory usage
-	myUsedMem=`cat $tmp | awk '/PhysMem/ {print $8}' | sed s/M// `
-	myFreeMem=`cat $tmp | awk '/PhysMem/ {print $10}' | sed s/M// `
-	myActiveMem=`cat $tmp | awk '/PhysMem/ {print $4}' | sed s/M// `
+	myUsedMem=`cat $tmp | awk '/PhysMem/ {print $2}' | sed s/M// `
+	myFreeMem=`cat $tmp | awk '/PhysMem/ {print $6}' | sed s/M// `
 	myTotalMem=` expr $myUsedMem + $myFreeMem`
 	#myUsedPer=`echo |awk '{print f / t * 100}' f=$myActiveMem t=$myTotalMem`
 	#myUsedPer=`echo "tmp=$myUsedPer; tmp /= 1; tmp" | bc`
-	myUsedPer=`echo $myActiveMem $myTotalMem | awk '{print int($1/$2*100)}'`
+	myUsedPer=`echo $myUsedMem $myTotalMem | awk '{print int($1/$2*100)}'`
 	line "Memory Usage" $myUsedPer
 }
 
