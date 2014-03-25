@@ -27,11 +27,11 @@ helper = /opt/boxen/bin/boxen-git-credential
         ui = true
 [core]
         excludesfile = /opt/boxen/config/git/gitignore
-        editor = subl
+        editor = "subl -n -w"
 [apply]
         whitespace = nowarn
 [mergetool]
-        keepBackup = false
+	keepBackup = false
 [difftool]
         prompt = false
 [help]
