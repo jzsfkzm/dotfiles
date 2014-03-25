@@ -51,8 +51,8 @@ git_untracked_changed_staged() {
 }
 
 git_dirty() {
-  st=$($git status 2>/dev/null | tail -n 1)
-  if [[ $st == "" ]]
+  st=$($git status 2>/dev/null | wc -l)
+  if [[ $st == 0 ]]
   then
     echo ""
   else
