@@ -5,7 +5,12 @@ autoload colors && colors
 git=`which git`
 
 git_current_branch() {
-  echo " on $(color_value $($git symbolic-ref HEAD 2>/dev/null | awk -F/ {'print $NF'}) cyan)"
+  branch=("$($git symbolic-ref HEAD 2>/dev/null | awk -F/ {'print $NF'})")
+
+  if [[ $branch != "" ]]
+  then
+    echo " on $(color_value $branch cyan)"
+  fi
 }
 
 git_stashes() {
@@ -27,7 +32,7 @@ color_value() {
 }
 
 git_untracked_changed_staged() {
-  git_status=("${(f)$($git status --porcelain --untracked-files=all | cut -c1-2)}")
+  git_status=("${(f)$($git status --porcelain --untracked-files=all 2>/dev/null | cut -c1-2)}")
   untracked=0
   changed=0
   staged=0
