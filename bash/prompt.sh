@@ -33,7 +33,16 @@ BRIGHT_WHITE="\[$ESC[${BRIGHT};37m\]"
 git=`which git`
 
 git_current_branch() {
-  echo " on $(color_value $($git symbolic-ref HEAD 2>/dev/null | awk -F/ {'print $NF'}) $BRIGHT_CYAN)"
+  branch=("$($git symbolic-ref HEAD 2>/dev/null | awk -F/ {'print $NF'})")
+
+  if [[ $branch != "" ]]; then
+    remote=("$($git config branch.$branch.remote | tr -d '\n')")
+    if [[ $remote != "" ]]; then
+      echo " on $(color_value $remote/$branch $BRIGHT_CYAN)"
+    else
+      echo " on $(color_value $branch $BRIGHT_CYAN)"
+    fi
+  fi
 }
 
 git_stashes() {
@@ -90,12 +99,34 @@ git_dirty() {
 }
 
 git_commits() {
-  commits=$($git cherry -v @{upstream} 2>/dev/null | wc -l | tr -d " ")
-  if [[ $commits == "0" ]]
+  branch=("$($git symbolic-ref HEAD 2>/dev/null | awk -F/ {'print $NF'})")
+  remote=("$($git config branch.$branch.remote | tr -d '\n')")
+
+  if [[ $remote == "" ]]
   then
     echo ""
   else
-    echo " [$(color_value $commits $BRIGHT_CYAN)]"
+    behind=$($git rev-list --left-right --count @{upstream}...$branch | awk {'print $1'})
+    ahead=$($git rev-list --left-right --count @{upstream}...$branch | awk {'print $2'})
+    if [[ $ahead == "0" && $behind == "0" ]]
+    then
+      echo ""
+    else
+      echo -n " ["
+      if [[ $behind != "0" ]]
+      then
+        echo -n "-$(color_value $behind $BRIGHT_CYAN)"
+        if [[ $ahead != "0" ]]
+        then
+          echo -n "/"
+        fi
+      fi
+      if [[ $ahead != "0" ]]
+      then
+        echo -n "+$(color_value $ahead $BRIGHT_CYAN)"
+      fi
+      echo -n "]"
+    fi
   fi
 }
 

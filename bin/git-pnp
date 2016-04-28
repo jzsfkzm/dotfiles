@@ -1,5 +1,5 @@
 #!/bin/bash
 
-git-reup -p && git push
+git-reup && git push
 
 #

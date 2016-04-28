@@ -1,11 +1,5 @@
 [hub]
         protocol = https
-[user]
-	name = Jozsef Kozma
-	email = joco@gawker.com
-
-[credential]
-helper = /opt/boxen/bin/boxen-git-credential
 
 [alias]
         fb = diff -b
@@ -26,8 +20,9 @@ helper = /opt/boxen/bin/boxen-git-credential
         branch = auto
         ui = true
 [core]
-        excludesfile = /opt/boxen/config/git/gitignore
+        excludesfile = /Users/joco/.gitignore
         editor = "subl -n -w"
+        autocrlf = input
 [apply]
         whitespace = nowarn
 [mergetool]
@@ -42,3 +37,16 @@ helper = /opt/boxen/bin/boxen-git-credential
         #
         # Setting to git 2.0 default to surpress warning message
         default = simple
+[user]
+	email = jozsef.kozma@gmail.com
+	name = József Kozma
+[filter "lfs"]
+	required = true
+	clean = git-lfs clean %f
+	smudge = git-lfs smudge %f
+[difftool "sourcetree"]
+	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+	path =
+[mergetool "sourcetree"]
+	cmd = /opt/homebrew-cask/Caskroom/sourcetree/2.2.2/SourceTree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+	trustExitCode = true

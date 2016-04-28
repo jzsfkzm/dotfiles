@@ -1,0 +1,8 @@
+#!/bin/bash
+
+ssh-add ~/.ssh/bitbucket_rsa
+ssh-add ~/.ssh/codeship_rsa
+ssh-add ~/.ssh/emarsys_gitlab
+ssh-add ~/.ssh/github_rsa
+ssh-add ~/.ssh/handle_rsa
+ssh-add ~/.ssh/id_rsa

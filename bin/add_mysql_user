@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if [ "$3" == "" ]; then
+	echo "usage: $0 [database] [username] [password]"
+	exit 1
+fi
+
+echo "CREATE DATABASE IF NOT EXISTS $1;" > /tmp/mysql_user_creator.sql
+echo "CREATE USER '$2'@'localhost' IDENTIFIED BY '$3';" >> /tmp/mysql_user_creator.sql
+echo "GRANT ALL ON $1.* TO '$2'@'localhost';" >> /tmp/mysql_user_creator.sql
+echo "FLUSH PRIVILEGES;" >> /tmp/mysql_user_creator.sql
+
+echo "MySQL root password";
+mysql -uroot -p < /tmp/mysql_user_creator.sql
+
+rm /tmp/mysql_user_creator.sql
+
+#

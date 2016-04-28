@@ -7,9 +7,13 @@ git=`which git`
 git_current_branch() {
   branch=("$($git symbolic-ref HEAD 2>/dev/null | awk -F/ {'print $NF'})")
 
-  if [[ $branch != "" ]]
-  then
-    echo " on $(color_value $branch cyan)"
+  if [[ $branch != "" ]]; then
+    remote=("$($git config branch.$branch.remote | tr -d '\n')")
+    if [[ $remote != "" ]]; then
+      echo " on $(color_value $remote/$branch cyan)"
+    else
+      echo " on $(color_value $branch cyan)"
+    fi
   fi
 }
 
@@ -56,8 +60,8 @@ git_untracked_changed_staged() {
 }
 
 git_dirty() {
-  st=$($git status 2>/dev/null | wc -l)
-  if [[ $st == 0 ]]
+  st=$($git status 2>/dev/null | wc -l | tr -d " ")
+  if [[ $st == "0" ]]
   then
     echo ""
   else
@@ -66,12 +70,34 @@ git_dirty() {
 }
 
 git_commits() {
-  commits=${$($git cherry -v @{upstream} 2>/dev/null | wc -l | tr -d " ")}
-  if [[ $commits == "0" ]]
+  branch=("$($git symbolic-ref HEAD 2>/dev/null | awk -F/ {'print $NF'})")
+  remote=("$($git config branch.$branch.remote | tr -d '\n')")
+
+  if [[ $remote == "" ]]
   then
     echo ""
   else
-    echo " [$(color_value $commits cyan)]"
+    behind=${$($git rev-list --left-right --count @{upstream}...$branch | awk {'print $1'})}
+    ahead=${$($git rev-list --left-right --count @{upstream}...$branch | awk {'print $2'})}
+    if [[ $ahead == "0" && $behind == "0" ]]
+    then
+      echo ""
+    else
+      echo -n " ["
+      if [[ $behind != "0" ]]
+      then
+        echo -n "-$(color_value $behind cyan)"
+        if [[ $ahead != "0" ]]
+        then
+          echo -n "/"
+        fi
+      fi
+      if [[ $ahead != "0" ]]
+      then
+        echo -n "+$(color_value $ahead cyan)"
+      fi
+      echo -n "]"
+    fi
   fi
 }
 
