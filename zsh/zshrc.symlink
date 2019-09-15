@@ -2,7 +2,7 @@
 export ZSH=$HOME/.dotfiles
 
 # your project folder that we can `c [tab]` to
-export PROJECTS=~/Code
+export PROJECTS=~/src
 
 # use .localrc for SUPER SECRET CRAP that you don't
 # want in your public, versioned repo.
@@ -39,18 +39,4 @@ done
 
 unset config_files
 
-### Added by the nvm install
-export NVM_DIR=~/.nvm
-source $(brew --prefix nvm)/nvm.sh
-
-### Added by the Heroku Toolbelt
-export PATH="/usr/local/heroku/bin:$PATH"
-
-export HOMEBREW_CASK_OPTS="--appdir=/Applications"
-
-LC_CTYPE="UTF-8"
-
-if [ -z "$SSH_AUTH_SOCK" ]; then
-	eval `ssh-agent -s`
-	ssh-add ~/.ssh/*_rsa
-fi
+export LC_ALL=en_US.UTF-8

@@ -102,11 +102,17 @@ git_commits() {
 }
 
 location() {
-  echo "$(color_value $USERNAME@$HOST cyan)"
+  # echo "$(color_value $USERNAME@$HOST cyan)"
+  if [[ $VAULTED_ENV == "" ]]
+  then
+    echo "$(color_value $USERNAME cyan)"
+  else
+    echo "$(color_value $USERNAME cyan):$(color_value $VAULTED_ENV red)"
+  fi
 }
 
 directory_name() {
   echo "$(color_value $PWD green)"
 }
 
-export PROMPT=$'[$(location):$(directory_name)]$(git_dirty)\n$ '
+export PS1=$'[$(location):$(directory_name)]$(git_dirty)\n$ '

@@ -1,27 +1,31 @@
 #/bin/bash
 
-brew install caskroom/cask/brew-cask
-brew cask install --appdir=/Applications \
+brew cask install \
 	1password \
-	atom \
-	caffeine \
+	amphetamine \
 	calibre \
-	chicken \
 	daisydisk \
+	docker \
+	dropbox \
 	firefox \
 	gimp \
 	gitup \
 	google-chrome \
-	hipchat \
 	iterm2 \
-	java \
-	mou \
+	jumpcut \
+	kitematic \
+	nvidia-geforce-now \
+	postman \
+	robo-3t \
+	signal \
 	slack \
 	steam \
+	sublime-merge \
 	sublime-text \
+	subtitles \
 	transmission \
-	vagrant \
 	virtualbox \
+	visual-studio-code \
 	vlc
 
 brew cask cleanup

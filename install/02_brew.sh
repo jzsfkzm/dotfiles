@@ -8,8 +8,10 @@ brew tap homebrew/homebrew-php
 
 brew install \
 	ack \
+	coreutils \
 	curl \
 	dos2unix \
+	findutils \
 	git \
 	mc \
 	mysql \

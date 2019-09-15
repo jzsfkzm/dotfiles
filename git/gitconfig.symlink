@@ -1,26 +1,19 @@
 [hub]
         protocol = https
-
 [alias]
-        fb = diff -b
         co = checkout
         ci = commit
         st = status
         hist = log --pretty=format:\"%h %ad | %s%d [%an]\" --graph --date=iso
         histlog = log --pretty=format:\"%ad | %s%d [%an] [%h]\" --date=iso
-        type = cat-file -t
-        dump = cat-file -p
-        promote = !$ZSH/bin/git-promote
-        wtf     = !$ZSH/bin/git-wtf
-        rank-contributers = !$ZSH/bin/git-rank-contributers
-        count   = !git shortlog -sn
+        wtf = !sh -c '$ZSH/bin/git-wtf -r -l'
 [color]
         diff = auto
         status = auto
         branch = auto
         ui = true
 [core]
-        excludesfile = /Users/joco/.gitignore
+        excludesfile = ~/.gitignore
         editor = "subl -n -w"
         autocrlf = input
 [apply]
@@ -39,7 +32,7 @@
         default = simple
 [user]
 	email = jozsef.kozma@gmail.com
-	name = József Kozma
+	name = József Kozma
 [filter "lfs"]
 	required = true
 	clean = git-lfs clean %f
@@ -48,5 +41,5 @@
 	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
 	path =
 [mergetool "sourcetree"]
-	cmd = /opt/homebrew-cask/Caskroom/sourcetree/2.2.2/SourceTree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+	cmd = /Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
 	trustExitCode = true

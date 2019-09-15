@@ -1,0 +1,17 @@
+#!env node
+
+const source = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const lengths = [8, 10, 15, 20, 32, 40];
+
+const createString = (lengthRequested) => {
+  let randomString = '';
+  while (randomString.length < lengthRequested) {
+    randomString += source[Math.floor(Math.random() * source.length)];
+  }
+
+  return randomString;
+};
+
+lengths.forEach((length) => {
+  console.log(`${length}: ${createString(length)}`);
+});
