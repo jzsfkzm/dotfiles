@@ -134,7 +134,12 @@ git_commits() {
 }
 
 location() {
-  echo "$(color_value `whoami`@`hostname` $BRIGHT_CYAN)"
+  if [[ $VAULTED_ENV == "" ]]
+  then
+    echo "$(color_value `whoami` $BRIGHT_CYAN)"
+  else
+    echo "$(color_value `whoami` $BRIGHT_CYAN):$(color_value $VAULTED_ENV $BRIGHT_RED)"
+  fi
 }
 
 directory_name() {
