@@ -42,6 +42,9 @@ git_current_branch() {
     else
       echo " on $(color_value $branch $BRIGHT_CYAN)"
     fi
+  else
+    hash=("$($git rev-parse --short HEAD)")
+    echo " on $(color_value $hash $BRIGHT_YELLOW)"
   fi
 }
 
