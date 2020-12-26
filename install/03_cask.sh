@@ -2,7 +2,7 @@
 
 brew cask install \
 	1password \
-	amphetamine \
+	caffeine \
 	calibre \
 	daisydisk \
 	docker \
@@ -23,7 +23,6 @@ brew cask install \
 	sublime-merge \
 	sublime-text \
 	subtitles \
-	transmission \
 	virtualbox \
 	visual-studio-code \
 	vlc
