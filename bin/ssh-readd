@@ -1,6 +1,3 @@
 #!/bin/bash
 
-ssh-add ~/.ssh/bitbucket_rsa
-ssh-add ~/.ssh/codeship_rsa
-ssh-add ~/.ssh/github_rsa
-ssh-add ~/.ssh/id_rsa
+ssh-add ~/.ssh/*_rsa
