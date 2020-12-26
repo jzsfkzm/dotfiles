@@ -40,3 +40,11 @@ done
 unset config_files
 
 export LC_ALL=en_US.UTF-8
+
+for i in ~/.zsh_profile.d/*.sh
+do
+  if [ -r $i ]; then
+    echo "Sourcing ${i}..."
+    . $i
+  fi
+done
