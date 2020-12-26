@@ -1,7 +1,10 @@
 #!env node
 
-const source = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const lengths = [8, 10, 15, 20, 32, 40];
+const alphanumericSource = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const fullSource = alphanumericSource + '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~';
+
+const source = process.argv[2] === 'alpha' ? alphanumericSource : fullSource;
+const lengths = [16, 20, 32, 40];
 
 const createString = (lengthRequested) => {
   let randomString = '';
