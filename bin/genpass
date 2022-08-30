@@ -3,7 +3,7 @@
 const alphanumericSource = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const fullSource = alphanumericSource + '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~';
 
-const source = process.argv[2] === 'alpha' ? alphanumericSource : fullSource;
+const source = process.argv[2] === 'more' ? fullSource : alphanumericSource;
 const lengths = [16, 20, 32, 40];
 
 const createString = (lengthRequested) => {
