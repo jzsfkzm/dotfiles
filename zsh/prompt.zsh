@@ -5,12 +5,21 @@ autoload colors && colors
 git=`which git`
 
 git_current_branch() {
-  branch=("$($git symbolic-ref HEAD 2>/dev/null | awk -F/ {'print $NF'})")
+  branch=("$($git symbolic-ref HEAD 2>/dev/null | sed 's/refs\/heads\///')")
 
   if [[ $branch != "" ]]; then
     remote=("$($git config branch.$branch.remote | tr -d '\n')")
     if [[ $remote != "" ]]; then
-      echo " on $(color_value $remote/$branch cyan)"
+      behind=${$($git rev-list --left-right --count @{upstream}...$branch | awk {'print $1'})}
+      ahead=${$($git rev-list --left-right --count @{upstream}...$branch | awk {'print $2'})}
+      if [[ $ahead == "0" && $behind == "0" ]]
+      then
+        branchColor="cyan"
+      else
+        branchColor="red"
+      fi
+
+      echo " on $(color_value $remote:$branch $branchColor)"
     else
       echo " on $(color_value $branch cyan)"
     fi
@@ -73,7 +82,7 @@ git_dirty() {
 }
 
 git_commits() {
-  branch=("$($git symbolic-ref HEAD 2>/dev/null | awk -F/ {'print $NF'})")
+  branch=("$($git symbolic-ref HEAD 2>/dev/null | sed 's/refs\/heads\///')")
   remote=("$($git config branch.$branch.remote | tr -d '\n')")
 
   if [[ $remote == "" ]]
@@ -105,13 +114,7 @@ git_commits() {
 }
 
 location() {
-  # echo "$(color_value $USERNAME@$HOST cyan)"
-  if [[ $VAULTED_ENV == "" ]]
-  then
-    echo "$(color_value $USERNAME cyan)"
-  else
-    echo "$(color_value $USERNAME cyan):$(color_value $VAULTED_ENV red)"
-  fi
+  echo "$(color_value $USERNAME cyan)"
 }
 
 directory_name() {
