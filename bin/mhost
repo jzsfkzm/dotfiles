@@ -1,98 +1,80 @@
-#!/usr/bin/php
-<?php
+#!/Users/joco/.volta/bin/node
+
+const fs = require('fs');
+const path = require('path');
 
 class Hoster {
-	private $file = '/etc/hosts';
+  file = '/etc/hosts';
+  usage = 'Usage: mhost [hostname] [(ip)]';
 
-	private $host = null;
+  constructor(args) {
+    this.host = null;
+    this.ip = undefined;
 
-	private $ip = null;
+    try {
+      this.checkArgs(args);
+      this.host = args[0];
+      if (args[1]) {
+        this.ip = [args[1]];
+      }
 
-	public function __construct($argv) {
-		try {
-			$this->checkArgs($argv);
+      if (this.check(this.host)) {
+        this.remove(this.host, this.ip);
+        this.remove(`www.${this.host}`, this.ip);
+      } else {
+        this.add(this.host, this.ip);
+        this.add(`www.${this.host}`, this.ip);
+      }
+    } catch (error) {
+      console.error(error.message);
+    }
+  }
 
-			$this->host = $argv[1];
-			if (isset($argv[2])) {
-				$this->ip = array(
-					$argv[2]
-				);
-			}
+  checkArgs(args) {
+    if (args.length < 1) {
+      throw new Error(this.usage);
+    }
+  }
 
-			if ($this->check($this->host) === true) {
-				$this->remove($this->host, $this->ip);
-			} else {
-				$this->add($this->host, $this->ip);
-			}
-		} catch (Exception $e) {
-			echo $e->getMessage();
-		}
-	}
+  add(host, ip = ['::1', '127.0.0.1']) {
+    if (Array.isArray(ip)) {
+      ip.forEach((ipItem) => {
+        this.add(host, ipItem);
+      });
+    } else {
+      const line = `${ip.padEnd(16)} ${host.padEnd(32)} # ${host} added by hoster at ${new Date().toISOString()}\n`;
+      console.log(`Adding ${line}`);
+      fs.appendFileSync(this.file, line);
+    }
+  }
 
-	private function usage() {
-		return "Usage: mhost [hostname] [(ip)]";
-	}
+  remove(host) {
+    console.log(`Removing ${host}`);
 
-	private function checkArgs($argv) {
-		if (count($argv) < 2) {
-			throw new Exception($this->usage());
-		}
-	}
+    const pattern = new RegExp(`# ${host} added by hoster at`);
+    const newLines = fs.readFileSync(this.file, 'utf-8')
+      .split('\n')
+      .filter((line) => {
+        return !pattern.test(line);
+      })
+      .join('\n');
 
-	private function add($host, $ip) {
-		if ($ip == null) {
-			$ip = array(
-				"::1",
-				"127.0.0.1",
-			);
-		}
+    fs.writeFileSync(this.file, newLines);
+  }
 
-		if (is_array($ip)) {
-			$comment = sprintf("# %s added by mhost at %s\n", $host, date('Y-m-d H:i:s'));
-			error_log($comment, 3, $this->file);
-			foreach ($ip as $ipItem) {
-				$this->add($host, $ipItem);
-			}
-			error_log($comment, 3, $this->file);
-		} else {
-			$line = sprintf("%s %s\n", str_pad($ip, 16), $host);
-			printf("Adding %s", $line);
-			error_log($line, 3, $this->file);
-		}
-	}
+  check(host) {
+    const lines = fs.readFileSync(this.file, 'utf-8').split('\n');
+    const pattern = new RegExp(`# ${host} added by hoster at`);
 
-	private function remove($host) {
-		$lines = file($this->file);
-		$isOn = false;
-		$newlines = array();
+    for (const line of lines) {
+      if (pattern.test(line)) {
+        return true;
+      }
+    }
 
-		foreach ($lines as $line) {
-			$triggerPattern = "/# " . $host . " added/";
-			if (preg_match($triggerPattern, $line)) {
-				$isOn = !$isOn;
-			}
-
-			if (preg_match($triggerPattern, $line) || $isOn === true) {
-				printf("Removing %s", $line);
-			} else {
-				$newlines[] = $line;
-			}
-		}
-
-		file_put_contents($this->file, join("", $newlines));
-	}
-
-	private function check($host) {
-		$lines = file($this->file);
-		foreach ($lines as $line) {
-			$pattern = "/(.*)\s" . $host . "/";
-			if (preg_match($pattern, $line)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
+    return false;
+  }
 }
 
-$hoster = new Hoster($argv);
+const args = process.argv.slice(2);
+new Hoster(args);
