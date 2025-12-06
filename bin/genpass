@@ -1,20 +1,313 @@
 #!env node
 
-const alphanumericSource = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const fullSource = alphanumericSource + '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~';
+const crypto = require('crypto');
 
-const source = process.argv[2] === 'more' ? fullSource : alphanumericSource;
-const lengths = [16, 20, 32, 40];
+// Word list for generating memorable passphrases
+const words = [
+  // Fruits & Food
+  'apple', 'banana', 'cherry', 'lemon', 'mango', 'olive', 'peach', 'berry',
+  'grape', 'melon', 'orange', 'plum', 'bread', 'cake', 'cookie', 'honey',
+  'pasta', 'pizza', 'rice', 'soup', 'taco', 'waffle', 'bacon', 'cheese',
+  'coffee', 'pepper', 'sugar', 'butter', 'cream', 'flour', 'sauce', 'salad',
+  'burger', 'potato', 'tomato', 'carrot', 'onion', 'garlic', 'ginger', 'mint',
+  'cocoa', 'vanilla', 'cinnamon', 'basil', 'thyme', 'sage', 'nutmeg', 'paprika',
+  'avocado', 'broccoli', 'cabbage', 'celery', 'corn', 'cucumber', 'lettuce', 'mushroom',
+  'peanut', 'pumpkin', 'radish', 'spinach', 'squash', 'bean', 'peas', 'beet',
+  'asparagus', 'eggplant', 'kale', 'leek', 'parsley', 'turnip', 'zucchini', 'yam',
+  'almond', 'cashew', 'walnut', 'hazelnut', 'pistachio', 'pecan', 'macadamia', 'chestnut',
+  'apricot', 'blueberry', 'coconut', 'fig', 'kiwi', 'lime', 'papaya', 'pear',
+  'pineapple', 'raspberry', 'strawberry', 'tangerine', 'watermelon', 'date', 'guava', 'lychee',
+  'nectarine', 'persimmon', 'pomegranate', 'prune', 'raisin', 'blackberry', 'cranberry', 'currant',
+  'elderberry', 'gooseberry', 'grapefruit', 'kumquat', 'mulberry', 'quince', 'clementine', 'mandarin',
+  'noodle', 'sushi', 'tempura', 'ramen', 'curry', 'stew', 'chili', 'gumbo',
+  'risotto', 'paella', 'jambalaya', 'kebab', 'falafel', 'hummus', 'salsa', 'guacamole',
+  'tofu', 'tempeh', 'quinoa', 'couscous', 'bulgur', 'barley', 'oats', 'millet',
+  'pretzel', 'bagel', 'muffin', 'donut', 'scone', 'biscuit', 'croissant', 'danish',
+  'brownie', 'pudding', 'custard', 'mousse', 'tart', 'pie', 'fudge', 'candy',
+  'caramel', 'toffee', 'nougat', 'truffle', 'praline', 'marzipan', 'fondant', 'ganache',
+  'yogurt', 'kefir', 'milk', 'cheddar', 'brie', 'gouda', 'feta', 'mozzarella',
+  'parmesan', 'ricotta', 'swiss', 'provolone', 'monterey', 'gorgonzola', 'camembert', 'manchego',
+  'oregano', 'rosemary', 'dill', 'chive', 'tarragon', 'cilantro', 'fennel', 'cumin',
+  'turmeric', 'cardamom', 'clove', 'saffron', 'anise', 'coriander', 'mustard', 'cayenne',
 
-const createString = (lengthRequested) => {
-  let randomString = '';
-  while (randomString.length < lengthRequested) {
-    randomString += source[Math.floor(Math.random() * source.length)];
+  // Animals
+  'dragon', 'elephant', 'tiger', 'kitten', 'panda', 'eagle', 'falcon', 'raven',
+  'whale', 'zebra', 'badger', 'beaver', 'cobra', 'deer', 'dolphin', 'fox',
+  'giraffe', 'hawk', 'jaguar', 'koala', 'leopard', 'moose', 'otter', 'panther',
+  'rabbit', 'seal', 'shark', 'snake', 'spider', 'squid', 'turtle', 'wolf',
+  'bear', 'lion', 'monkey', 'penguin', 'rhino', 'camel', 'buffalo', 'cheetah',
+  'gorilla', 'hippo', 'llama', 'lobster', 'octopus', 'parrot', 'peacock', 'pigeon',
+  'salmon', 'sparrow', 'toucan', 'walrus', 'wombat', 'armadillo', 'bat', 'crab',
+  'flamingo', 'gecko', 'lynx', 'meerkat', 'newt', 'owl', 'puma', 'python',
+  'alligator', 'antelope', 'bison', 'bobcat', 'buzzard', 'catfish', 'condor', 'coyote',
+  'crane', 'crow', 'dingo', 'dove', 'duck', 'ferret', 'finch', 'frog',
+  'gazelle', 'goat', 'goose', 'hamster', 'heron', 'hyena', 'iguana', 'jackal',
+  'kangaroo', 'lemur', 'lizard', 'mallard', 'mantis', 'marlin', 'mole', 'mongoose',
+  'narwhal', 'ocelot', 'oriole', 'osprey', 'ostrich', 'oyster', 'pelican', 'pheasant',
+  'porcupine', 'prairie', 'quail', 'raccoon', 'rattler', 'robin', 'rooster', 'scorpion',
+  'seagull', 'seahorse', 'skunk', 'sloth', 'snail', 'stingray', 'swallow', 'swan',
+  'swordfish', 'termite', 'toad', 'trout', 'vulture', 'weasel', 'woodpecker', 'yak',
+  'alpaca', 'barracuda', 'basilisk', 'bee', 'beetle', 'butterfly', 'cardinal', 'chameleon',
+  'chipmunk', 'cicada', 'clam', 'cougar', 'cricket', 'crocodile', 'dragonfly', 'eel',
+  'firefly', 'goldfish', 'grasshopper', 'grizzly', 'guinea', 'hornet', 'hummingbird', 'impala',
+  'jellyfish', 'kingfish', 'krill', 'ladybug', 'macaw', 'manatee', 'mockingbird', 'moth',
+  'mouse', 'orca', 'panther', 'platypus', 'poodle', 'possum', 'raven', 'reindeer',
+  'salmon', 'sardine', 'serpent', 'shrimp', 'starfish', 'stork', 'sturgeon', 'tarantula',
+  'thrush', 'tuna', 'viper', 'wasp', 'wren', 'anchovy', 'barb', 'bream',
+  'caterpillar', 'clownfish', 'dragonet', 'haddock', 'halibut', 'herring', 'koi', 'lamprey',
+
+  // Nature
+  'forest', 'garden', 'island', 'jungle', 'mountain', 'ocean', 'river', 'sunset',
+  'valley', 'cloud', 'storm', 'thunder', 'frost', 'bloom', 'coral', 'ember',
+  'volcano', 'glacier', 'canyon', 'desert', 'meadow', 'swamp', 'stream', 'rain',
+  'snow', 'wind', 'leaf', 'tree', 'flower', 'grass', 'moss', 'fern',
+  'aurora', 'beach', 'cliff', 'dawn', 'dune', 'eclipse', 'geyser', 'horizon',
+  'lagoon', 'lightning', 'mist', 'oasis', 'pond', 'prairie', 'rapids', 'ridge',
+  'shore', 'spring', 'sunrise', 'twilight', 'waterfall', 'wave', 'willow', 'woodland',
+  'asteroid', 'comet', 'meteor', 'cosmos', 'moonlight', 'starlight', 'equinox', 'solstice',
+  'autumn', 'winter', 'summer', 'birch', 'cedar', 'cypress', 'elm', 'maple',
+  'oak', 'pine', 'redwood', 'sequoia', 'spruce', 'walnut', 'bamboo', 'cactus',
+  'orchid', 'tulip', 'rose', 'daisy', 'lily', 'lotus', 'iris', 'violet',
+  'sunflower', 'jasmine', 'lavender', 'magnolia', 'peony', 'poppy', 'marigold', 'carnation',
+  'brook', 'creek', 'cascade', 'delta', 'estuary', 'fjord', 'inlet', 'marsh',
+  'plateau', 'ravine', 'summit', 'tundra', 'wetland', 'basin', 'bluff', 'cavern',
+  'gorge', 'grotto', 'knoll', 'peak', 'peninsula', 'sandbar', 'shoal', 'strait',
+  'terrain', 'tropics', 'tidepool', 'iceberg', 'pinnacle', 'quarry', 'reef', 'savanna',
+
+  // Objects & Things
+  'anchor', 'arrow', 'bottle', 'bridge', 'castle', 'hammer', 'lamp', 'mirror',
+  'piano', 'rocket', 'umbrella', 'window', 'engine', 'flame', 'globe', 'laser',
+  'marble', 'torch', 'yacht', 'camera', 'compass', 'crown', 'drum', 'flute',
+  'guitar', 'helmet', 'lantern', 'mask', 'needle', 'pencil', 'sword', 'trumpet',
+  'barrel', 'bucket', 'candle', 'crystal', 'feather', 'gem', 'horn', 'jewel',
+  'badge', 'bell', 'blade', 'book', 'chair', 'clock', 'coin', 'door',
+  'flag', 'fork', 'glass', 'harp', 'key', 'knife', 'lens', 'medal',
+  'plate', 'ring', 'rope', 'shield', 'spear', 'staff', 'table', 'vault',
+  'violin', 'wheel', 'zipper', 'beacon', 'brick', 'chain', 'chip', 'dice',
+  'anvil', 'axe', 'baton', 'bench', 'binoculars', 'blanket', 'bolt', 'boomerang',
+  'bowl', 'box', 'broom', 'brush', 'cannon', 'canvas', 'cart', 'chisel',
+  'crayon', 'cube', 'dagger', 'desk', 'diamond', 'drill', 'easel', 'fan',
+  'fidget', 'gear', 'goggles', 'grenade', 'handle', 'hinge', 'hook', 'hourglass',
+  'journal', 'kettle', 'latch', 'lever', 'locket', 'loom', 'magnet', 'mallet',
+  'microscope', 'monocle', 'necklace', 'oar', 'paddle', 'palette', 'pendant', 'plank',
+  'pliers', 'prism', 'pulley', 'quill', 'razor', 'scepter', 'scissors', 'screw',
+  'shovel', 'sickle', 'sledge', 'sling', 'socket', 'sphere', 'spindle', 'spool',
+  'spoon', 'spring', 'sprocket', 'stamp', 'staple', 'stick', 'strap', 'stylus',
+  'tablet', 'tack', 'telescope', 'thimble', 'thread', 'tile', 'tongs', 'tool',
+  'tray', 'trowel', 'tweezers', 'valve', 'vase', 'wedge', 'whistle', 'winch',
+  'wrench', 'yoke', 'abacus', 'accordion', 'amulet', 'anvil', 'ballast', 'banner',
+
+  // Abstract & Concepts
+  'dream', 'ghost', 'karma', 'quest', 'unity', 'wizard', 'atlas', 'nexus',
+  'omega', 'delta', 'helix', 'lunar', 'solar', 'urban', 'vapor', 'zenith',
+  'chaos', 'echo', 'fate', 'glory', 'honor', 'logic', 'magic', 'myth',
+  'nova', 'peace', 'power', 'royal', 'shadow', 'spirit', 'truth', 'wisdom',
+  'angel', 'avatar', 'cipher', 'cosmic', 'enigma', 'epic', 'haven', 'hero',
+  'legend', 'liberty', 'miracle', 'mystic', 'oracle', 'phoenix', 'pulse', 'relic',
+  'sage', 'sentinel', 'titan', 'triumph', 'vanguard', 'victory', 'virtue', 'vision',
+  'aura', 'destiny', 'eternity', 'fortune', 'infinity', 'journey', 'nirvana', 'paradise',
+  'balance', 'bliss', 'bounty', 'clarity', 'courage', 'essence', 'faith', 'freedom',
+  'grace', 'harmony', 'hope', 'justice', 'kindness', 'luck', 'mercy', 'muse',
+  'passion', 'purity', 'radiance', 'rapture', 'reason', 'serenity', 'solace', 'spark',
+  'splendor', 'tranquil', 'valor', 'venture', 'wonder', 'zeal', 'arcane', 'astral',
+  'beacon', 'celestial', 'charm', 'divine', 'elixir', 'eternal', 'fable', 'glow',
+  'hallow', 'ideal', 'immortal', 'luminary', 'mantra', 'noble', 'omen', 'patron',
+  'radiant', 'reverie', 'ritual', 'sacred', 'sanctum', 'specter', 'templar', 'utopia',
+  'valiant', 'vigil', 'zealot', 'primal', 'sovereign', 'eternal', 'monarch', 'realm',
+
+  // Colors & Materials
+  'navy', 'silver', 'violet', 'yellow', 'onyx', 'pearl', 'coral', 'ivory',
+  'amber', 'azure', 'bronze', 'crimson', 'golden', 'indigo', 'jade', 'lime',
+  'maroon', 'purple', 'ruby', 'scarlet', 'copper', 'iron', 'steel', 'tin',
+  'black', 'blue', 'brown', 'cyan', 'emerald', 'gray', 'green', 'magenta',
+  'pink', 'red', 'white', 'ebony', 'gold', 'platinum', 'quartz', 'topaz',
+  'diamond', 'sapphire', 'opal', 'garnet', 'obsidian', 'crystal', 'granite', 'marble',
+  'beige', 'burgundy', 'charcoal', 'cobalt', 'lavender', 'mauve', 'mint', 'olive',
+  'orange', 'peach', 'salmon', 'teal', 'turquoise', 'aqua', 'rose', 'blush',
+  'coral', 'cream', 'frost', 'ochre', 'periwinkle', 'plum', 'sage', 'sand',
+  'sepia', 'sienna', 'slate', 'smoke', 'taupe', 'terra', 'umber', 'vermillion',
+  'aluminum', 'brass', 'chrome', 'cobalt', 'graphite', 'lead', 'mercury', 'nickel',
+  'pewter', 'titanium', 'tungsten', 'zinc', 'alloy', 'metal', 'oxide', 'polymer',
+  'ceramic', 'clay', 'concrete', 'glass', 'leather', 'linen', 'nylon', 'rubber',
+  'silk', 'velvet', 'wool', 'cotton', 'denim', 'satin', 'suede', 'tweed',
+  'agate', 'amethyst', 'aquamarine', 'beryl', 'carnelian', 'citrine', 'jasper', 'lapis',
+  'malachite', 'moonstone', 'onyx', 'peridot', 'tourmaline', 'turquoise', 'zircon', 'amber',
+
+  // Tech & Science
+  'atom', 'circuit', 'cyber', 'data', 'digital', 'electron', 'fiber', 'fusion',
+  'galaxy', 'laser', 'matrix', 'mega', 'micro', 'nebula', 'neuron', 'photon',
+  'pixel', 'plasma', 'proton', 'pulse', 'quantum', 'radar', 'robotic', 'signal',
+  'sonic', 'spectrum', 'stellar', 'techno', 'thermal', 'turbo', 'ultra', 'vector',
+  'binary', 'codec', 'crypto', 'engine', 'logic', 'neural', 'orbital', 'silicon',
+  'algorithm', 'android', 'antimatter', 'byte', 'catalyst', 'centrifuge', 'clone', 'core',
+  'database', 'decoder', 'dynamo', 'ether', 'firmware', 'gravity', 'hologram', 'isotope',
+  'kinetic', 'latitude', 'longitude', 'magnetic', 'molecule', 'nanite', 'neutron', 'nucleus',
+  'optics', 'particle', 'protocol', 'reactor', 'satellite', 'sensor', 'serum', 'synapse',
+  'telescope', 'transistor', 'universe', 'voltage', 'warp', 'xenon', 'zero', 'atom',
+  'beacon', 'cipher', 'delta', 'equation', 'formula', 'gamma', 'hybrid', 'ion',
+  'kinesis', 'laser', 'modular', 'nexus', 'orbit', 'phase', 'quark', 'ratio',
+  'scanner', 'synthesis', 'theorem', 'unified', 'vortex', 'wavelength', 'xerography', 'yield',
+
+  // Places & Geography
+  'alpine', 'arctic', 'atlas', 'baltic', 'cairo', 'delta', 'dubai', 'euro',
+  'harbor', 'haven', 'metro', 'nordic', 'pacific', 'plaza', 'polar', 'terra',
+  'tokyo', 'tropic', 'urban', 'vegas', 'vienna', 'vista', 'yukon', 'zone',
+  'asia', 'berlin', 'boston', 'cape', 'dallas', 'denver', 'eden', 'fiji',
+  'amazon', 'andes', 'aspen', 'atlanta', 'austin', 'bali', 'bangkok', 'barcelona',
+  'beijing', 'belgrade', 'bogota', 'bristol', 'brussels', 'budapest', 'cairo', 'calgary',
+  'canton', 'chicago', 'cologne', 'congo', 'darwin', 'detroit', 'dublin', 'florence',
+  'geneva', 'glasgow', 'hamburg', 'houston', 'istanbul', 'jakarta', 'kansas', 'lisbon',
+  'london', 'madrid', 'manila', 'memphis', 'miami', 'milan', 'monaco', 'montreal',
+  'moscow', 'munich', 'naples', 'nashville', 'paris', 'phoenix', 'prague', 'quebec',
+  'raleigh', 'rome', 'seattle', 'seoul', 'shanghai', 'sydney', 'taipei', 'toronto',
+  'tuscany', 'utah', 'venice', 'warsaw', 'zurich', 'africa', 'arctic', 'europa',
+
+  // Actions & Verbs
+  'blaze', 'boost', 'charge', 'drift', 'flash', 'glide', 'hover', 'impact',
+  'launch', 'merge', 'orbit', 'pivot', 'rise', 'rush', 'shift', 'spark',
+  'spike', 'surge', 'swift', 'twist', 'vault', 'wave', 'zoom', 'dash',
+  'bounce', 'climb', 'dive', 'flow', 'jump', 'leap', 'pulse', 'soar',
+  'ascend', 'burst', 'cascade', 'chase', 'crack', 'crash', 'dance', 'descend',
+  'disrupt', 'evade', 'explode', 'flip', 'freeze', 'gallop', 'glimmer', 'ignite',
+  'jolt', 'kindle', 'lunge', 'plunge', 'race', 'rally', 'rebound', 'ricochet',
+  'ripple', 'rotate', 'shimmer', 'shatter', 'skip', 'slide', 'spin', 'spiral',
+  'sprint', 'strike', 'stumble', 'swirl', 'swoop', 'thrive', 'thrust', 'thunder',
+  'topple', 'toss', 'tumble', 'whirl', 'wiggle', 'wobble', 'zigzag', 'zap',
+
+  // Music & Arts
+  'anthem', 'ballet', 'ballad', 'blues', 'brass', 'canvas', 'chord', 'chorus',
+  'concert', 'encore', 'harmony', 'melody', 'opera', 'rhythm', 'sketch', 'tempo',
+  'verse', 'vocal', 'banjo', 'cello', 'clarinet', 'cymbal', 'fiddle', 'organ',
+  'sax', 'tuba', 'ukulele', 'viola', 'xylophone', 'bass', 'tenor', 'soprano',
+  'acoustic', 'allegro', 'alto', 'aria', 'baroque', 'calypso', 'concerto', 'disco',
+  'dixie', 'funk', 'gospel', 'grunge', 'indie', 'jazz', 'mambo', 'overture',
+  'polka', 'prelude', 'reggae', 'requiem', 'rondo', 'salsa', 'samba', 'scale',
+  'sonata', 'soul', 'swing', 'symphony', 'tango', 'techno', 'waltz', 'baroque',
+  'easel', 'etch', 'fresco', 'mosaic', 'mural', 'pastel', 'pigment', 'portrait',
+  'sculpture', 'stencil', 'studio', 'texture', 'watercolor', 'charcoal', 'crayon', 'gallery',
+
+  // Sports & Games
+  'archer', 'athlete', 'boxing', 'chess', 'cricket', 'darts', 'fencing', 'golf',
+  'hockey', 'judo', 'karate', 'marathon', 'polo', 'racing', 'rugby', 'soccer',
+  'tennis', 'volley', 'wrestle', 'bowling', 'surfing', 'skating', 'skiing', 'diving',
+  'cycling', 'rowing', 'sailing', 'climbing', 'running', 'swimming', 'jumping', 'throwing',
+  'archery', 'badminton', 'baseball', 'basketball', 'billiards', 'bocce', 'checkers', 'croquet',
+  'curling', 'dodgeball', 'football', 'frisbee', 'gymnastics', 'handball', 'lacrosse', 'netball',
+  'paddleball', 'parkour', 'pickleball', 'pingpong', 'pool', 'racquetball', 'rodeo', 'shuffleboard',
+  'skateboard', 'snowboard', 'softball', 'squash', 'surfing', 'triathlon', 'ultimate', 'volleyball',
+  'wakeboard', 'waterski', 'wrestling', 'yoga', 'aikido', 'capoeira', 'kendo', 'taekwondo',
+  'amateur', 'champion', 'coach', 'compete', 'defense', 'endurance', 'offense', 'rally',
+
+  // Buildings & Architecture
+  'abbey', 'arcade', 'arch', 'arena', 'barn', 'cabin', 'chapel', 'citadel',
+  'cottage', 'dome', 'estate', 'fortress', 'gallery', 'library', 'mansion', 'monastery',
+  'monument', 'mosque', 'palace', 'pavilion', 'pyramid', 'shrine', 'spire', 'stadium',
+  'temple', 'tower', 'villa', 'alcove', 'balcony', 'cellar', 'chamber', 'dungeon',
+  'basilica', 'belfry', 'bunker', 'bungalow', 'capitol', 'cathedral', 'chateau', 'cloister',
+  'coliseum', 'courthouse', 'embassy', 'garage', 'gazebo', 'granary', 'greenhouse', 'hangar',
+  'igloo', 'inn', 'kiosk', 'lighthouse', 'loft', 'manor', 'market', 'mill',
+  'mausoleum', 'museum', 'obelisk', 'opera', 'pagoda', 'pantheon', 'pergola', 'portico',
+  'prison', 'sanctuary', 'schoolhouse', 'silo', 'skyscraper', 'stable', 'steeple', 'storehouse',
+  'studio', 'synagogue', 'tabernacle', 'terrace', 'theater', 'townhouse', 'turret', 'warehouse',
+
+  // Occupations
+  'artist', 'baker', 'builder', 'captain', 'chef', 'doctor', 'driver', 'engineer',
+  'farmer', 'guard', 'hunter', 'judge', 'lawyer', 'miner', 'nurse', 'painter',
+  'pilot', 'poet', 'ranger', 'sailor', 'scholar', 'scout', 'smith', 'soldier',
+  'teacher', 'trader', 'writer', 'weaver', 'warrior', 'mentor', 'ranger', 'keeper',
+  'accountant', 'actor', 'alchemist', 'architect', 'assassin', 'banker', 'barber', 'baron',
+  'bartender', 'blacksmith', 'bookseller', 'botanist', 'brewer', 'butcher', 'carpenter', 'cartographer',
+  'chaplain', 'chemist', 'clerk', 'cobbler', 'composer', 'conductor', 'consul', 'craftsman',
+  'curator', 'dealer', 'designer', 'detective', 'diplomat', 'duchess', 'editor', 'explorer',
+  'fisherman', 'florist', 'foreman', 'gardener', 'general', 'gladiator', 'glazier', 'goldsmith',
+  'governor', 'guide', 'healer', 'herald', 'hermit', 'historian', 'inventor', 'jeweler',
+  'jester', 'joiner', 'knight', 'landlord', 'librarian', 'locksmith', 'lumberjack', 'marshal',
+  'mason', 'mayor', 'mechanic', 'merchant', 'messenger', 'miller', 'monk', 'navigator',
+  'officer', 'oracle', 'organist', 'overseer', 'page', 'patron', 'peasant', 'philosopher',
+  'physician', 'plumber', 'porter', 'potter', 'priest', 'prince', 'professor', 'prophet',
+  'prospector', 'puppeteer', 'queen', 'rector', 'regent', 'rogue', 'samurai', 'scribe',
+  'sculptor', 'sentinel', 'sergeant', 'servant', 'sheriff', 'shipwright', 'silversmith', 'spy',
+  'squire', 'steward', 'surgeon', 'surveyor', 'tailor', 'tanner', 'tinker', 'tutor',
+  'umpire', 'vendor', 'vintner', 'watchman', 'wizard', 'woodcutter', 'alchemist', 'apprentice',
+
+  // Vehicles & Transport
+  'airplane', 'bicycle', 'boat', 'canoe', 'carriage', 'ferry', 'glider', 'helicopter',
+  'jetski', 'kayak', 'scooter', 'sled', 'subway', 'tanker', 'train', 'tram',
+  'trolley', 'truck', 'wagon', 'barge', 'cruiser', 'frigate', 'galley', 'vessel',
+  'airship', 'ambulance', 'autos', 'balloon', 'battleship', 'biplane', 'boxcar', 'buggy',
+  'bulldozer', 'bus', 'cable', 'catamaran', 'chariot', 'clipper', 'coaster', 'coach',
+  'corvette', 'coupe', 'destroyer', 'dinghy', 'dirigible', 'dragracer', 'flatbed', 'gondola',
+  'hatchback', 'hovercraft', 'hydrofoil', 'jalopy', 'jeep', 'jetliner', 'jitney', 'jumbo',
+  'limousine', 'lorry', 'moped', 'motorboat', 'motorcycle', 'omnibus', 'pickup', 'plane',
+  'raft', 'railcar', 'roadster', 'rowboat', 'sailboat', 'sedan', 'shuttle', 'speedboat',
+  'steamer', 'streetcar', 'taxi', 'tender', 'tractor', 'trailer', 'transport', 'tugboat',
+  'van', 'warship', 'watercraft', 'yacht', 'zeppelin', 'buggy', 'cart', 'convertible',
+
+  // Weather & Elements
+  'blizzard', 'breeze', 'cyclone', 'drizzle', 'fog', 'hail', 'hurricane', 'monsoon',
+  'shower', 'sleet', 'tempest', 'tornado', 'typhoon', 'zephyr', 'air', 'earth',
+  'fire', 'water', 'vapor', 'smoke', 'steam', 'dust', 'sand', 'clay',
+  'avalanche', 'chinook', 'cirrus', 'cloudburst', 'cumulus', 'deluge', 'downpour', 'drought',
+  'dust', 'flurry', 'freezing', 'gale', 'gust', 'hoarfrost', 'humidity', 'ice',
+  'jetstream', 'lightning', 'maelstrom', 'nimbus', 'permafrost', 'precipitation', 'squall', 'stratus',
+  'thaw', 'thunderbolt', 'tidal', 'torrent', 'tradewind', 'updraft', 'whirlwind', 'windstorm',
+  'zinc', 'aether', 'argon', 'carbon', 'helium', 'hydrogen', 'krypton', 'neon',
+  'nitrogen', 'oxygen', 'radon', 'sulfur', 'uranium', 'plutonium', 'radium', 'thorium',
+
+  // Misc
+  'ace', 'alpha', 'beta', 'gamma', 'sigma', 'theta', 'omega', 'prime',
+  'diesel', 'gravel', 'ink', 'jazz', 'joker', 'kite', 'knight', 'neon',
+  'night', 'noble', 'prism', 'tango', 'venom', 'vortex', 'waltz', 'xenial',
+  'xerox', 'yonder', 'zephyr', 'zenon', 'zenith', 'young', 'zero', 'zodiac',
+  'apex', 'blitz', 'cosmos', 'dynasty', 'epoch', 'falcon', 'griffin', 'halo',
+  'cipher', 'enigma', 'portal', 'relic', 'sigil', 'talisman', 'totem', 'warden',
+  'amber', 'anchor', 'bandit', 'banner', 'baron', 'beacon', 'bishop', 'blazer',
+  'bounty', 'brigade', 'buffer', 'bullet', 'burst', 'canyon', 'cardinal', 'catalyst',
+  'cavalier', 'champion', 'chaser', 'comet', 'command', 'compass', 'convoy', 'corsair',
+  'crescent', 'crusader', 'crystal', 'cyclone', 'dealer', 'delta', 'drifter', 'eclipse',
+  'element', 'elite', 'empire', 'exodus', 'flare', 'forge', 'frontier', 'fusion',
+  'guardian', 'havoc', 'horizon', 'impulse', 'infinite', 'kingdom', 'legacy', 'lunar',
+  'magnum', 'maverick', 'meridian', 'midnight', 'mirage', 'nexus', 'nomad', 'nova',
+  'odyssey', 'orbit', 'outlaw', 'paladin', 'paradox', 'phantom', 'photon', 'pioneer',
+  'plasma', 'platinum', 'polaris', 'prime', 'prism', 'protocol', 'quantum', 'quasar',
+  'radiance', 'raider', 'ranger', 'raptor', 'reactor', 'rebel', 'reflex', 'regime',
+  'requiem', 'resonance', 'revolver', 'rhapsody', 'rider', 'rogue', 'rover', 'royal',
+  'saber', 'sapphire', 'savage', 'seeker', 'shadow', 'shifter', 'silver', 'skyline',
+  'solar', 'solstice', 'sonic', 'sovereign', 'specter', 'spectrum', 'sphinx', 'spiral',
+  'stealth', 'stellar', 'storm', 'striker', 'summit', 'supernova', 'surge', 'syndicate',
+  'talon', 'tempest', 'terminus', 'thunder', 'tidal', 'titan', 'token', 'tracker',
+  'trident', 'trigger', 'trinity', 'trooper', 'twilight', 'ultra', 'valor', 'vector',
+  'velocity', 'vengeance', 'venture', 'vertex', 'vigil', 'vintage', 'viper', 'voltage',
+  'voyager', 'vulcan', 'warden', 'warlock', 'warlord', 'whisper', 'wildfire', 'wraith',
+  'zenith', 'zero', 'zodiac', 'zone', 'advent', 'aftermath', 'allegiance', 'alliance',
+  'armada', 'arsenal', 'ascension', 'bastion', 'brigade', 'cadence', 'caliber', 'citadel',
+  'colossus', 'conqueror', 'covenant', 'dominion', 'eclipse', 'exodus', 'fallout', 'fortress',
+  'genesis', 'gladiator', 'harbinger', 'horizon', 'imperium', 'inferno', 'legion', 'nexus',
+  'oblivion', 'pantheon', 'paragon', 'prophecy', 'providence', 'regime', 'sovereign', 'testament'
+];
+
+const getRandomWord = () => words[crypto.randomInt(0, words.length)];
+
+const getRandomDigit = () => crypto.randomInt(0, 10);
+
+const createPassphrase = (wordCount) => {
+  const selectedWords = [];
+  for (let i = 0; i < wordCount; i++) {
+    selectedWords.push(getRandomWord());
   }
 
-  return randomString;
+  // Randomly capitalize one word in all caps
+  const capsIndex = crypto.randomInt(0, wordCount);
+  selectedWords[capsIndex] = selectedWords[capsIndex].toUpperCase();
+
+  // Add a random number at the end for extra security
+  const passphrase = selectedWords.join('-') + '-' + getRandomDigit() + getRandomDigit() + getRandomDigit() + getRandomDigit();
+  return passphrase;
 };
 
-lengths.forEach((length) => {
-  console.log(`${length}: ${createString(length)}`);
+const wordCounts = [4, 5, 6, 7];
+
+console.log('Word-based passphrases (easier to remember):\n');
+wordCounts.forEach((count) => {
+  console.log(`${count} words: ${createPassphrase(count)}`);
 });
