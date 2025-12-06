@@ -1,32 +1,33 @@
 #/bin/bash
 
-brew cask install \
+brew install \
 	1password \
-	caffeine \
-	calibre \
-	daisydisk \
-	docker \
-	dropbox \
-	firefox \
+	cursor \
 	gimp \
-	gitup \
-	google-chrome \
-	iterm2 \
-	jumpcut \
-	kitematic \
-	nvidia-geforce-now \
-	postman \
-	robo-3t \
-	signal \
-	slack \
-	steam \
-	sublime-merge \
 	sublime-text \
-	subtitles \
-	virtualbox \
-	visual-studio-code \
-	vlc
+	vlc \
+	arc \
+	daisydisk \
+	gitup-app \
+	signal \
+	telegram \
+	docker-desktop \
+	google-chrome \
+	slack \
+	transmission \
+	caffeine \
+	electrum \
+	iterm2 \
+	numi \
+	spotify \
+	viber \
+	calibre \
+	element \
+	jumpcut \
+	nvidia-geforce-now \
+	steam \
+	visual-studio-code
 
-brew cask cleanup
+brew cleanup
 
 #

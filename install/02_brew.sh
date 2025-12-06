@@ -1,24 +1,14 @@
 #/bin/bash
 
-ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-
-brew tap homebrew/dupes
-brew tap homebrew/versions
-brew tap homebrew/homebrew-php
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 brew install \
-	ack \
-	coreutils \
-	curl \
-	dos2unix \
-	findutils \
-	git \
-	mc \
-	mysql \
-	node \
+	ffmpeg \
+	midnight-commander \
 	nvm \
-	php56 \
-	unrar \
+	util-linux \
 	wget
+
+brew cleanup
 
 #
