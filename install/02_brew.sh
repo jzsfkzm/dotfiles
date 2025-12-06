@@ -4,6 +4,7 @@
 
 brew install \
 	ffmpeg \
+	itermocil \
 	midnight-commander \
 	nvm \
 	util-linux \
